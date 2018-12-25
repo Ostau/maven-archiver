@@ -244,7 +244,10 @@ public class MavenArchiver
 
         // Added basic entries
         Manifest m = new Manifest();
-        addCreatedByEntry( session, m, entries );
+        if ( config.isAddBuildEnvironmentEntries() )
+        {
+            handleBuildEnvironmentEntries( session, m, entries );
+        }
 
         addCustomEntries( m, entries, config );
 
@@ -508,8 +511,6 @@ public class MavenArchiver
     private void addCustomEntries( Manifest m, Map<String, String> entries, ManifestConfiguration config )
         throws ManifestException
     {
-        addManifestAttribute( m, entries, "Build-Jdk", System.getProperty( "java.version" ) );
-
         /*
          * TODO: rethink this, it wasn't working Artifact projectArtifact = project.getArtifact(); if (
          * projectArtifact.isSnapshot() ) { Manifest.Attribute buildNumberAttr = new Manifest.Attribute( "Build-Number",
@@ -615,6 +616,9 @@ public class MavenArchiver
         Manifest manifest = getManifest( session, workingProject, archiveConfiguration );
 
         // Configure the jar
+
+        archiver.setMinimalDefaultManifest( true );
+
         archiver.addConfiguredManifest( manifest );
 
         archiver.setCompress( archiveConfiguration.isCompress() );
@@ -658,7 +662,7 @@ public class MavenArchiver
     }
 
     private void addCreatedByEntry( MavenSession session, Manifest m, Map<String, String> entries )
-        throws ManifestException
+    throws ManifestException
     {
         String createdBy = "Apache Maven";
         if ( session != null ) // can be null due to API backwards compatibility
@@ -670,6 +674,16 @@ public class MavenArchiver
             }
         }
         addManifestAttribute( m, entries, "Created-By", createdBy );
+    }
+
+    private void handleBuildEnvironmentEntries( MavenSession session, Manifest m, Map<String, String> entries )
+        throws ManifestException
+    {
+        addCreatedByEntry( session, m, entries );
+        addManifestAttribute( m, entries, "Build-Jdk", String.format( "%s (%s)", System.getProperty( "java.version" ),
+            System.getProperty( "java.vm.vendor" ) ) );
+        addManifestAttribute( m, entries, "Build-Os", String.format( "%s (%s; %s)", System.getProperty( "os.name" ),
+            System.getProperty( "os.version" ), System.getProperty( "os.arch" ) ) );
     }
 
     private Artifact findArtifactWithFile( Set<Artifact> artifacts, File file )

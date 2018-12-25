@@ -482,6 +482,7 @@ public class MavenArchiverTest
         config.setForced( true );
         config.getManifest().setAddDefaultImplementationEntries( true );
         config.getManifest().setAddDefaultSpecificationEntries( true );
+        config.getManifest().setAddBuildEnvironmentEntries( true );
 
         // noinspection deprecation
         MavenSession session = getDummySessionWithoutMavenVersion();
@@ -490,6 +491,11 @@ public class MavenArchiverTest
         Attributes manifest = getJarFileManifest( jarFile ).getMainAttributes();
 
         assertEquals( "Apache Maven", manifest.get( new Attributes.Name( "Created-By" ) ) ); // no version number
+        assertEquals( String.format( "%s (%s)", System.getProperty( "java.version" ),
+            System.getProperty( "java.vm.vendor" )), manifest.get( new Attributes.Name( "Build-Jdk" ) ) );
+        assertEquals( String.format( "%s (%s; %s)", System.getProperty( "os.name" ),
+            System.getProperty( "os.version" ), System.getProperty( "os.arch" )),
+            manifest.get( new Attributes.Name( "Build-Os" ) ) );
 
         assertEquals( "archiver test", manifest.get( Attributes.Name.SPECIFICATION_TITLE ) );
         assertEquals( "0.1", manifest.get( Attributes.Name.SPECIFICATION_VERSION ) );
@@ -498,8 +504,6 @@ public class MavenArchiverTest
         assertEquals( "archiver test", manifest.get( Attributes.Name.IMPLEMENTATION_TITLE ) );
         assertEquals( "0.1.1", manifest.get( Attributes.Name.IMPLEMENTATION_VERSION ) );
         assertEquals( "Apache", manifest.get( Attributes.Name.IMPLEMENTATION_VENDOR ) );
-
-        assertEquals( System.getProperty( "java.version" ), manifest.get( new Attributes.Name( "Build-Jdk" ) ) );
     }
 
     @Test
@@ -517,6 +521,7 @@ public class MavenArchiverTest
         config.setForced( true );
         config.getManifest().setAddDefaultImplementationEntries( true );
         config.getManifest().setAddDefaultSpecificationEntries( true );
+        config.getManifest().setAddBuildEnvironmentEntries( true );
 
         Map<String, String> manifestEntries = new HashMap<String, String>();
         manifestEntries.put( "foo", "bar" );
@@ -539,6 +544,11 @@ public class MavenArchiverTest
         Attributes manifest = jarFileManifest.getMainAttributes();
 
         assertEquals( "Apache Maven 3.0.4", manifest.get( new Attributes.Name( "Created-By" ) ) );
+        assertEquals( String.format( "%s (%s)", System.getProperty( "java.version" ),
+            System.getProperty( "java.vm.vendor" )), manifest.get( new Attributes.Name( "Build-Jdk" ) ) );
+        assertEquals( String.format( "%s (%s; %s)", System.getProperty( "os.name" ),
+            System.getProperty( "os.version" ), System.getProperty( "os.arch" )),
+            manifest.get( new Attributes.Name( "Build-Os" ) ) );
 
         assertEquals( "archiver test", manifest.get( Attributes.Name.SPECIFICATION_TITLE ) );
         assertEquals( "0.1", manifest.get( Attributes.Name.SPECIFICATION_VERSION ) );
@@ -553,8 +563,6 @@ public class MavenArchiverTest
         assertEquals( "bar", manifest.get( new Attributes.Name( "foo" ) ) );
         assertEquals( "olivier", manifest.get( new Attributes.Name( "first-name" ) ) );
         assertEquals( "org.apache.maven.archiver", manifest.getValue( "Automatic-Module-Name" ) );
-
-        assertEquals( System.getProperty( "java.version" ), manifest.get( new Attributes.Name( "Build-Jdk" ) ) );
 
         assertTrue( StringUtils.isEmpty( manifest.getValue( new Attributes.Name( "keyWithEmptyValue" ) ) ) );
         assertTrue( manifest.containsKey( new Attributes.Name( "keyWithEmptyValue" ) ) );
@@ -605,6 +613,7 @@ public class MavenArchiverTest
 
         MavenArchiveConfiguration config = new MavenArchiveConfiguration();
         config.setForced( true );
+        config.getManifest().setAddBuildEnvironmentEntries( true );
 
         archiver.createArchive( session, project, config );
         assertTrue( jarFile.exists() );
